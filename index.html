@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sp1ng Hub | Official Scripts & Modules</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            purple: '#8b5cf6',
+                            violet: '#7c3aed',
+                            cyan: '#06b6d4',
+                            darkBg: '#0b0c10',
+                            cardBg: 'rgba(23, 25, 35, 0.75)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0c10;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+
+        /* Snow Canvas overlay */
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Glassmorphism visual style */
+        .glass-card {
+            background: rgba(20, 22, 34, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px -10px rgba(139, 92, 246, 0.25);
+        }
+
+        /* Glowing accents */
+        .glow-purple {
+            box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.4);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa 0%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0c10;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+
+        /* Notification Toast Animations */
+        @keyframes slideIn {
+            from { transform: translateY(100%) opacity(0); }
+            to { transform: translateY(0) opacity(1); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .toast-animate {
+            animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans relative selection:bg-purple-500 selection:text-white">
+
+    <!-- Falling Snow Particle Canvas -->
+    <canvas id="snowCanvas"></canvas>
+
+    <!-- Content Container -->
+    <div class="relative z-10 flex-grow flex flex-col max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Header Section -->
+        <header class="text-center my-8 md:my-12">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs sm:text-sm font-medium mb-4">
+                <span class="flex h-2 w-2 rounded-full bg-purple-400 animate-pulse"></span>
+                Sp1ng Hub Operational Suite
+            </div>
+            
+            <h1 class="font-display text-4xl sm:text-6xl font-extrabold tracking-tight mb-4">
+                Welcome to <span class="gradient-text">Sp1ng Hub</span>
+            </h1>
+            <p class="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+                Clean, performant, and optimized scripts designed for seamless execution across your favorite Roblox experiences.
+            </p>
+
+            <!-- Search & Filter Controls -->
+            <div class="mt-8 max-w-md mx-auto relative">
+                <div class="relative flex items-center">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search scripts or games..." 
+                        class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-gray-900/80 border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all shadow-inner">
+                </div>
+            </div>
+        </header>
+
+        <!-- Script Cards Grid -->
+        <main class="flex-grow my-6">
+            <div id="gamesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards dynamically populated / filtered via JS -->
+            </div>
+
+            <!-- Empty State Search Message -->
+            <div id="noResults" class="hidden text-center py-16">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800/50 text-gray-500 mb-4">
+                    <i class="fa-solid fa-ghost text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-300">No matching scripts found</h3>
+                <p class="text-gray-500 text-sm mt-1">Try refining your search keyword.</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-16 pt-8 border-t border-gray-800/60 text-center text-xs text-gray-500 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p>© 2026 Sp1ng Hub. All rights reserved.</p>
+            <div class="flex gap-4">
+                <span class="inline-flex items-center gap-1.5 text-gray-400">
+                    <i class="fa-solid fa-shield-halved text-emerald-400"></i> Undetected Logic
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-gray-400">
+                    <i class="fa-solid fa-bolt text-amber-400"></i> Fast Execution
+                </span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Script Data & Interactive Logic -->
+    <script>
+        // Scripts Catalog Data
+        const gamesData = [
+            {
+                id: 'mm2',
+                title: 'Murder Mystery 2',
+                category: 'Popular',
+                icon: 'fa-knife-kitchen',
+                badges: ['Safe', 'Updated', 'OP'],
+                payload: `loadstring(game:HttpGet("https://raw.githubusercontent.com/sp1ngimsp1ng/MM2Script/refs/heads/main/loader.lua"))()`,
+                color: 'from-red-500/20 to-purple-500/10'
+            },
+            {
+                id: 'slapper',
+                title: 'Guess The Slapper',
+                category: 'Minigame',
+                icon: 'fa-hand-back-fist',
+                badges: ['Safe', 'Updated', 'OP'],
+                payload: `loadstring(game:HttpGet("https://raw.githubusercontent.com/sp1ngimsp1ng/Sp1ng-Guess-The-Slapper-Roblox/refs/heads/main/newupdate22october2026.lua"))()`,
+                color: 'from-amber-500/20 to-orange-500/10'
+            },
+            {
+                id: 'artist',
+                title: 'Catch The Artist',
+                category: 'Fun',
+                icon: 'fa-palette',
+                badges: ['Safe', 'Updated', 'OP'],
+                payload: `loadstring(game:HttpGet("https://pastefy.app/UpCIZYjk/raw"))()`,
+                color: 'from-cyan-500/20 to-blue-500/10'
+            },
+            {
+                id: 'jenga',
+                title: 'Jenga Chaos',
+                category: 'Arcade',
+                icon: 'fa-cubes',
+                badges: ['Safe', 'Updated', 'OP'],
+                payload: `loadstring(game:HttpGet("https://pastefy.app/BkW8gtKw/raw"))()`,
+                color: 'from-emerald-500/20 to-teal-500/10'
+            },
+            {
+                id: 'soccer',
+                title: 'Illegal Soccer',
+                category: 'Sports',
+                icon: 'fa-futbol',
+                badges: ['Safe', 'Updated', 'OP'],
+                payload: `loadstring(game:HttpGet("https://raw.githubusercontent.com/sp1ngimsp1ng/Illegal-Soccer-Script/refs/heads/main/illegalsoccer.luau"))()`,
+                color: 'from-violet-500/20 to-fuchsia-500/10'
+            }
+        ];
+
+        // Render Game Cards
+        function renderCards(filterText = '') {
+            const grid = document.getElementById('gamesGrid');
+            const noResults = document.getElementById('noResults');
+            grid.innerHTML = '';
+
+            const filtered = gamesData.filter(game => 
+                game.title.toLowerCase().includes(filterText.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                filtered.forEach(game => {
+                    const card = document.createElement('div');
+                    card.className = 'glass-card rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group';
+
+                    card.innerHTML = `
+                        <!-- Subtle Background Glow Gradient -->
+                        <div class="absolute -top-12 -right-12 w-32 h-32 bg-gradient-to-br ${game.color} rounded-full blur-2xl group-hover:scale-150 transition-all duration-500"></div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all duration-300">
+                                    <i class="fa-solid ${game.icon} text-xl"></i>
+                                </div>
+                                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-800/80 text-gray-400 border border-gray-700/50">
+                                    ${game.category}
+                                </span>
+                            </div>
+
+                            <h3 class="text-xl font-bold font-display text-white mb-3 group-hover:text-purple-300 transition-colors">
+                                ${game.title}
+                            </h3>
+
+                            <!-- Badges -->
+                            <div class="flex flex-wrap gap-2 mb-6">
+                                <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                                    <i class="fa-solid fa-shield-check text-[10px]"></i> Safe
+                                </span>
+                                <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1">
+                                    <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Updated
+                                </span>
+                                <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                                    <i class="fa-solid fa-fire text-[10px]"></i> OP
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Copy Button -->
+                        <button onclick="copyToClipboard('${encodeURIComponent(game.payload)}', '${game.title}', this)" 
+                            class="w-full py-3 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 active:scale-[0.98]">
+                            <i class="fa-regular fa-copy"></i>
+                            <span>Copy Script</span>
+                        </button>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        // Clipboard Copy Logic with Notification
+        function copyToClipboard(encodedPayload, gameTitle, btnElement) {
+            const payload = decodeURIComponent(encodedPayload);
+            
+            // Clipboard Fallback Strategy
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(payload);
+            } else {
+                const textArea = document.createElement('textarea');
+                textArea.value = payload;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                textArea.remove();
+            }
+
+            // Button Feedback
+            const originalText = btnElement.innerHTML;
+            btnElement.innerHTML = `<i class="fa-solid fa-check"></i> <span>Copied!</span>`;
+            btnElement.classList.remove('bg-purple-600', 'hover:bg-purple-500');
+            btnElement.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+
+            setTimeout(() => {
+                btnElement.innerHTML = originalText;
+                btnElement.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+                btnElement.classList.add('bg-purple-600', 'hover:bg-purple-500');
+            }, 2000);
+
+            // Toast Alert
+            showToast(gameTitle);
+        }
+
+        // Custom Toast Notification
+        function showToast(title) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast-animate pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-900 border border-purple-500/40 text-white shadow-2xl shadow-purple-950/50';
+
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-gray-200">Script Copied!</h4>
+                    <p class="text-xs text-gray-400">${title} script is ready to paste.</p>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Search Input Listener
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderCards(e.target.value);
+        });
+
+        // Initialize Cards
+        renderCards();
+
+        // Canvas Falling Snow Animation Logic
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Flake {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = mathRandom(0, width);
+                this.y = mathRandom(-20, -10);
+                this.size = mathRandom(1.5, 4);
+                this.speedY = mathRandom(0.8, 2.2);
+                this.speedX = mathRandom(-0.5, 0.5);
+                this.opacity = mathRandom(0.3, 0.8);
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+
+                if (this.y > height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = "rgba(139, 92, 246, 0.5)";
+                ctx.fill();
+            }
+        }
+
+        function mathRandom(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        const flakeCount = Math.floor(Math.min(width / 10, 100));
+        const flakes = Array.from({ length: flakeCount }, () => new Flake());
+
+        function animateSnow() {
+            ctx.clearRect(0, 0, width, height);
+            flakes.forEach(flake => {
+                flake.update();
+                flake.draw();
+            });
+            requestAnimationFrame(animateSnow);
+        }
+
+        window.onload = function() {
+            animateSnow();
+        };
+    </script>
+</body>
+</html>
